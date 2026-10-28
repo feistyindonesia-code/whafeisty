@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { assertDatabaseSchemaCurrent } from './services/database/connection';
-import jwt from 'jsonwebtoken';
-import { AccountModel, DeviceModel, UserModel } from './services/database/models';
+import { initDatabase } from './services/database/connection';
+import { apiKeyAuth } from './middleware/auth';
 import authRoutes from './api/v1/auth';
 import userRoutes from './api/v1/users';
 import packageRoutes from './api/v1/packages';
@@ -18,10 +18,20 @@ import webhookRoutes from './api/v1/webhooks';
 import groupRoutes from './api/v1/groups';
 import mediaRoutes from './api/v1/media';
 import usageRoutes from './api/v1/usage';
-import settingsRoutes from './api/v1/settings';
-import customerFeatureRoutes from './api/v1/customer-features';
 import { BaileysClient } from './services/whatsapp/baileys-client';
 import P from 'pino';
+import path from 'path';
+import fs from 'fs';
+
+dotenv.config();
+
+const logger = P({ level: process.env.NODE_ENV === 'production' ? 'info' : 'debug' });
+
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 const app = express();
 const logger = P({ level: process.env.NODE_ENV === 'production' ? 'info' : 'debug' });
