@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=whatsapp_user
+      - DB_PASSWORD=${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      - DB_NAME=whatsapp_api
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - TRUST_PROXY=${TRUST_PROXY:-}
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
+      - FRONTEND_URL=${FRONTEND_URL:-}
+      - SUPERADMIN_EMAIL=${SUPERADMIN_EMAIL:-}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD:-}
+      - SUPERADMIN_NAME=${SUPERADMIN_NAME:-Super Admin}
+      - API_KEY_PREFIX=whap_
+      - WA_SESSION_DIR=/app/sessions
+      - WA_AUTH_TIMEOUT=30000
+      - MAX_DEVICES_PER_ACCOUNT=5
+      - CONTACT_DAILY_MESSAGE_LIMIT=${CONTACT_DAILY_MESSAGE_LIMIT:-10}
+      - CONTACT_WEEKLY_MESSAGE_LIMIT=${CONTACT_WEEKLY_MESSAGE_LIMIT:-30}
+      - SEND_FAILURE_PAUSE_THRESHOLD=${SEND_FAILURE_PAUSE_THRESHOLD:-5}
+      - SEND_FAILURE_PAUSE_MINUTES=${SEND_FAILURE_PAUSE_MINUTES:-60}
+      - APP_URL=${APP_URL:-http://localhost:4000}
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - sessions_data:/app/sessions
+      - uploads_data:/app/uploads
+      - payment_proofs_data:/app/private_uploads/payments
+      - media_data:/app/private_uploads/media
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: whatsapp_api
+      MYSQL_USER: whatsapp_user
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  sessions_data:
+  uploads_data:
+  payment_proofs_data:
+  media_data:

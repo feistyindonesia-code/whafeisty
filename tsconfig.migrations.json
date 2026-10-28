@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist-migrations",
+    "rootDir": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["migrations/run.ts", "src/services/database/connection.ts"],
+  "exclude": ["node_modules", "dist", "dist-migrations"]
+}
